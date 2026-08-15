@@ -4,8 +4,6 @@
 
 支持截图、触控、遥控按键、应用启动、UI 布局分析，以及**中文输入**（基于 [YADB](https://github.com/ysbing/YADB) 的 `app_process` 文本注入，无需安装 APK、无需切换输入法）。
 
-> 🦞 本集合最初为控制创维 Skyworth Android 电视（7T861_A23）而编写，已验证可用；原理（SSH → Termux adb → adbd）适用于所有可通过 SSH 访问 Termux、且本地运行 adbd 的 Android 设备。
-
 ---
 
 ## ✨ 功能特性

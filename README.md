@@ -1,10 +1,10 @@
 # adb-control
 
-通过 SSH + ADB 远程控制 Android 设备（电视 / 盒子 / 手机）的 AstrBot 技能。
+通过 SSH + ADB 远程控制 Android 设备（电视 / 盒子 / 手机）的脚本与文档集合，以 AstrBot 技能（`SKILL.md`）的形式组织。
 
 支持截图、触控、遥控按键、应用启动、UI 布局分析，以及**中文输入**（基于 [YADB](https://github.com/ysbing/YADB) 的 `app_process` 文本注入，无需安装 APK、无需切换输入法）。
 
-> 🦞 本技能最初为控制创维 Skyworth Android 电视（7T861_A23）而编写，已验证可用；理论上适用于所有可通过 SSH 访问 Termux、且本地运行 adbd 的 Android 设备。
+> 🦞 本集合最初为控制创维 Skyworth Android 电视（7T861_A23）而编写，已验证可用；原理（SSH → Termux adb → adbd）适用于所有可通过 SSH 访问 Termux、且本地运行 adbd 的 Android 设备。
 
 ---
 
@@ -71,6 +71,14 @@ sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no -P "$SSH_PORT" "$SSH_USER
 ```
 
 完整命令手册见 [SKILL.md](SKILL.md)。
+
+---
+
+## 🧪 测试说明
+
+- ✅ 本仓库**仅在 AstrBot 环境中测试通过**（测试设备：创维 Skyworth 7T861_A23 / Android 10 / Termux + android-tools）
+- ⚠️ **未在其他工具中测试**（如 Claude Desktop、Cline 等其他 Agent 框架或手动环境）
+- 📌 核心机制（SSH + Termux adb + YADB app_process 注入）与具体框架无关，理论上可迁移到任何能执行 shell 命令的环境，但迁移后请自行验证
 
 ---
 

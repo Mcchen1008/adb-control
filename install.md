@@ -5,7 +5,7 @@
 ## 参数
 
 - SSH 连接参数：同 `SKILL.md`（`SSH_HOST` / `SSH_PORT` / `SSH_USER` / `SSH_PASS`）
-- 技能目录：本文件所在目录（含 `yadb` 二进制），实际路径 `/AstrBot/data/skills/adb-control`
+- 技能目录：本文件所在目录（含 `yadb` 二进制）；AstrBot 环境中的实际路径为 `/AstrBot/data/skills/adb-control`
 - 设备端 YADB 路径：`/sdcard/yadb`（固定，勿改）
 
 ## 1. 环境检查

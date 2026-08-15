@@ -9,6 +9,16 @@ description: 通过 SSH + ADB 远程控制 Android 设备。支持截图、触�
 
 首次使用前，先执行同目录下 `install.md` 完成环境初始化（安装 adb、连接 adbd、部署 YADB）。技能目录内已附带 `yadb` 二进制，可直接上传部署。
 
+## 整体工作流程
+
+每次操控设备按此顺序执行：
+
+1. **连接**：SSH 进入设备 Termux（`sshpass ssh ...`，参数见下）
+2. **确认 adb**：`adb connect 127.0.0.1:5555`（首次或断线时执行），确认 `emulator-5554` 在线（`adb devices`）
+3. **执行操作**：通过 `adb -s emulator-5554 shell "COMMAND"` 发指令——按键、点击、截图、启动应用
+4. **中文输入**：需要输入中文时用 YADB：`adb -s emulator-5554 shell "app_process -Djava.class.path=/sdcard/yadb /data/local/tmp com.ysbing.yadb.Main -keyboard 中文"`
+5. **确认结果**：截图拉回本地查看（`screencap` + scp），或 `uiautomator dump` / `-layout` 找元素坐标后点击
+
 ## 连接配置
 
 执行任何操作前先填写连接参数（必填，从用户处获取或沿用会话中已知值）：

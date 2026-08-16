@@ -18,6 +18,7 @@ description: 通过 SSH + ADB 远程控制 Android 设备。支持截图、触�
 3. **执行操作**：通过 `adb -s emulator-5554 shell "COMMAND"` 发指令——按键、点击、截图、启动应用
 4. **中文输入**：需要输入中文时用 YADB：`adb -s emulator-5554 shell "app_process -Djava.class.path=/sdcard/yadb /data/local/tmp com.ysbing.yadb.Main -keyboard 中文"`
 5. **确认结果**：截图拉回本地查看（`screencap` + scp），或 `uiautomator dump` / `-layout` 找元素坐标后点击
+6. **防卡死**：操作后必须验证状态（焦点/画面/activity 是否变化）；**无变化时禁止重复按确认**，按「防卡死操作协议」诊断与兜底
 
 ## 连接配置
 
@@ -129,6 +130,65 @@ adb -s emulator-5554 shell dumpsys power | grep -E "mWakefulness|Display Power"
 adb -s emulator-5554 shell "input keyevent --meta 4096 29"   # Ctrl+A 全选
 adb -s emulator-5554 shell "input keyevent KEYCODE_DEL"      # 删除
 ```
+
+## 防卡死操作协议（阉割系统兼容）
+
+> 部分安卓阉割系统（TV 定制 ROM）功能不完整：应用可能**打不开**，或**打开了但选择无效果**，尤其系统自带的对话框（权限/ANR/存储提示）按钮经常"点了没反应"。AI 一旦卡住会反复按确认键空转。**禁止盲目连按，先按本协议来。**
+
+### 核心原则：一次操作一次验证
+
+任何 `keyevent` / `tap` / `am start` 之后：
+
+1. 等待 1~2 秒让界面响应
+2. 重新抓状态快照（见下）
+3. **对比操作前后**：焦点变了 / 画面变了 / activity 变了 → 生效，继续下一步
+4. **连续 2 次操作都无变化 → 立即停止点击，转「诊断」**，绝不来第 3 次
+
+### 状态快照（操作前后各抓一次用于对比）
+
+```bash
+# ① 当前焦点窗口（最常用）
+adb -s emulator-5554 shell "dumpsys window | grep mCurrentFocus"
+# ② 前台 Activity（判断应用是否真的切过去了）
+adb -s emulator-5554 shell "dumpsys activity activities | grep mResumedActivity"
+# ③ 画面指纹（截图后取 md5，两次一致 = 画面没变）
+adb -s emulator-5554 shell "screencap -p /data/local/tmp/shot.png && md5sum /data/local/tmp/shot.png"
+# ④ 是否弹了系统对话框（ANR / 权限 / 存储提示）
+adb -s emulator-5554 shell "dumpsys window windows | grep -iE 'dialog|anr|permission'"
+adb -s emulator-5554 shell "uiautomator dump /data/local/tmp/ui.xml && cat /data/local/tmp/ui.xml"
+```
+
+### 操作无效果时的诊断顺序（按序排查，不要重按）
+
+1. **看焦点**：`mCurrentFocus` 还在原地吗？——在 → 按键可能被系统吞了
+2. **看画面**：截图 md5 前后是否一致？——一致 → 界面确实没响应
+3. **看对话框**：是否被系统对话框挡住？（`-iE 'dialog|anr|permission'`）
+4. **看应用**：目标包是否真的在前台？（`mResumedActivity`）
+5. **看输入法**：`dumpsys input_method | grep -E "mCurMethodId|mInputShown"`
+
+### 兜底恢复序列（标准操作无效时按序尝试，每步后重新验证）
+
+```bash
+# ① 返回一次（可能只是焦点丢了）
+adb -s emulator-5554 shell "input keyevent KEYCODE_BACK"
+# ② 回主页，重新进应用（绕开卡死的界面）
+adb -s emulator-5554 shell "input keyevent KEYCODE_HOME"
+adb -s emulator-5554 shell "monkey -p 包名 -c android.intent.category.LAUNCHER 1"
+# ③ 应用打不开时，用 am start 直接指定入口 Activity（先用 resolve-activity 查）
+adb -s emulator-5554 shell "cmd package resolve-activity --brief 包名"
+adb -s emulator-5554 shell "am start -n 包名/入口Activity"
+# ④ 仍不行：强停后重开（清掉坏状态）
+adb -s emulator-5554 shell "am force-stop 包名"
+adb -s emulator-5554 shell "monkey -p 包名 -c android.intent.category.LAUNCHER 1"
+```
+
+### 阉割系统已知坑
+
+- **按键被吞**：部分 ROM 的 `KEYCODE_DPAD_CENTER` 在个别控件上无效，改用 `KEYCODE_ENTER` 或 `input tap x y` 直接点击
+- **应用"打不开"**：`monkey` 启动失败是常态，改用 `am start -n 包名/Activity`；入口 Activity 用 `cmd package resolve-activity --brief 包名` 查询
+- **对话框按钮看不见**：TV 对话框常为 Surface 绘制，uiautomator 无节点；用截图对比 + 估算按钮坐标 tap
+- **权限弹窗"点了没反应"**：可能被桌面系统拦截，先 `KEYCODE_HOME` 再重进，或直接 `pm grant 包名 权限名` 绕过弹窗
+- **点击无效果**：先确认屏幕是否亮着（`dumpsys power | grep -E "mWakefulness|Display Power"`），TV 待机时点击会被吞
 
 ## 注意事项
 

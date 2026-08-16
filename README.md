@@ -72,6 +72,18 @@ sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no -P "$SSH_PORT" "$SSH_USER
 
 ---
 
+## 🛡️ 阉割系统防卡死
+
+部分安卓阉割系统（TV 定制 ROM）会出现**应用打不开**、**点了没反应**（尤其系统自带对话框的按钮）。本技能内置「防卡死操作协议」：
+
+- **一次操作一次验证**：每次按键/点击后用 `mCurrentFocus`、截图 md5、`mResumedActivity` 对比操作前后状态
+- **禁止盲目连按**：连续 2 次操作无变化立即停止，按「诊断顺序」排查（焦点/画面/对话框/前台应用/输入法）
+- **兜底恢复序列**：BACK → HOME 重进 → `am start` 指定入口 → `force-stop` 强停重开
+
+详见 [SKILL.md](SKILL.md) 的「防卡死操作协议」章节。
+
+---
+
 ## 🧪 测试说明
 
 - ✅ 本仓库**仅在 AstrBot 环境中测试通过**（测试设备：创维 Skyworth 7T861_A23 / Android 10 / Termux + android-tools）

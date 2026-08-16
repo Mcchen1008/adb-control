@@ -62,10 +62,10 @@ SSH_PASS="<sshd 密码>"
 sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no -p "$SSH_PORT" "$SSH_USER"@"$SSH_HOST" \
   'export PATH=/data/data/com.termux/files/usr/bin:$PATH; adb -s emulator-5554 shell "app_process -Djava.class.path=/sdcard/yadb /data/local/tmp com.ysbing.yadb.Main -keyboard 你好世界"'
 
-# 示例：截图回传
+# 示例：截图回传（临时文件放设备端 /data/local/tmp，重启自动清空）
 sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no -p "$SSH_PORT" "$SSH_USER"@"$SSH_HOST" \
-  'export PATH=/data/data/com.termux/files/usr/bin:$PATH; adb -s emulator-5554 shell "screencap -p /sdcard/screen.png"'
-sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no -P "$SSH_PORT" "$SSH_USER"@"$SSH_HOST":/sdcard/screen.png ./screen.png
+  'export PATH=/data/data/com.termux/files/usr/bin:$PATH; adb -s emulator-5554 shell "screencap -p /data/local/tmp/screen.png"'
+sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no -P "$SSH_PORT" "$SSH_USER"@"$SSH_HOST":/data/local/tmp/screen.png ./screen.png
 ```
 
 完整命令手册见 [SKILL.md](SKILL.md)。

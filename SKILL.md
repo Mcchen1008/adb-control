@@ -45,7 +45,7 @@ sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/de
 **拉取文件（截图/日志回传）：**
 
 ```bash
-sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P "$SSH_PORT" "$SSH_USER"@"$SSH_HOST":/sdcard/screen.png ./screen.png
+sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P "$SSH_PORT" "$SSH_USER"@"$SSH_HOST":/data/local/tmp/screen.png ./screen.png
 ```
 
 ## 操作命令
@@ -62,10 +62,10 @@ adb -s emulator-5554 shell "getprop ro.product.model"
 ### 截图
 
 ```bash
-# 设备端截图
-adb -s emulator-5554 shell "screencap -p /sdcard/screen.png"
+# 设备端截图（临时文件放 /data/local/tmp，重启自动清空）
+adb -s emulator-5554 shell "screencap -p /data/local/tmp/screen.png"
 # 拉回本地（用「拉取文件」模板）
-sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P "$SSH_PORT" "$SSH_USER"@"$SSH_HOST":/sdcard/screen.png ./screen.png
+sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P "$SSH_PORT" "$SSH_USER"@"$SSH_HOST":/data/local/tmp/screen.png ./screen.png
 
 # YADB 强制截图（应用阻止截图时）
 adb -s emulator-5554 shell "app_process -Djava.class.path=/sdcard/yadb /data/local/tmp com.ysbing.yadb.Main -screenshot"
@@ -91,8 +91,8 @@ adb -s emulator-5554 shell "app_process -Djava.class.path=/sdcard/yadb /data/loc
 ```bash
 # YADB 布局 dump（uiautomator 失效时用）
 adb -s emulator-5554 shell "app_process -Djava.class.path=/sdcard/yadb /data/local/tmp com.ysbing.yadb.Main -layout"
-# 原生 uiautomator
-adb -s emulator-5554 shell "uiautomator dump /sdcard/ui.xml && cat /sdcard/ui.xml"
+# 原生 uiautomator（临时文件放 /data/local/tmp，重启自动清空）
+adb -s emulator-5554 shell "uiautomator dump /data/local/tmp/ui.xml && cat /data/local/tmp/ui.xml"
 ```
 
 ### 按键与触摸
@@ -134,6 +134,7 @@ adb -s emulator-5554 shell "input keyevent KEYCODE_DEL"      # 删除
 
 - YADB 必须通过 `adb shell` 运行，不能直接在 SSH shell 中执行（shell 用户才有事件注入权限，直接跑会 `Aborted`）
 - YADB 路径固定为 `/sdcard/yadb`，不要移动（`/data/local/tmp` 重启清空；Termux 私有目录 shell 用户无权读）
+- 临时文件（截图 `screen.png`、UI dump `ui.xml` 等）统一放设备端 `/data/local/tmp`，重启自动清空、不留垃圾；拉回本地后即用即删
 - 中文参数在双引号中直接传递（UTF-8），避免嵌套单引号
 - 输入中文前确保输入框已获得焦点；输入框有残留文本时先清空
 - TV 输入法（搜狗/天赐）是 Surface 绘制，uiautomator 看不到候选词，输入中文优先用 YADB
